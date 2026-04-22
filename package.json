@@ -1,6 +1,6 @@
 {
   "name": "katex-svelte",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Svelte 5 wrapper for KaTeX — render LaTeX math and chemistry equations (mhchem) with \\ce{} notation",
   "keywords": [
     "svelte",
@@ -45,8 +45,8 @@
   ],
   "scripts": {
     "dev": "vite dev",
-    "build": "svelte-package -i src/lib",
-    "prepublishOnly": "bun run build",
+    "build": "svelte-package -i src/lib && cp node_modules/katex/dist/katex.min.css dist/",
+    "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "svelte-check --tsconfig tsconfig.json",
