@@ -183,13 +183,23 @@ export function renderAuto(text: string, options: AutoRenderOptions = {}): strin
       if (parts[i].type === 'html') continue;
 
       const { content } = parts[i];
-      const openIdx = content.indexOf(delim.open);
-      if (openIdx === -1) continue;
-
-      // Check for escaping (e.g. \$)
-      if (openIdx > 0 && content[openIdx - 1] === '\\') {
-        continue;
+      
+      let startIndex = 0;
+      let openIdx = -1;
+      
+      while (true) {
+        openIdx = content.indexOf(delim.open, startIndex);
+        if (openIdx === -1) break;
+        
+        // Check for escaping (e.g. \\$)
+        if (openIdx > 0 && content[openIdx - 1] === '\\') {
+          startIndex = openIdx + 1; // move past the escaped character
+        } else {
+          break; // found unescaped
+        }
       }
+
+      if (openIdx === -1) continue;
 
       const closeIdx = content.indexOf(delim.close, openIdx + delim.open.length);
       if (closeIdx === -1) continue;

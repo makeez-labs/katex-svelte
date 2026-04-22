@@ -301,7 +301,6 @@ describe('KaTeX and mhchem integration', () => {
     expect(html).toContain('NaCl');
   });
 
-
   it('renders mixed math and chemistry', () => {
     const html = renderAuto('The pH is $-\\\\log[H^+]$ and water is \\ce{H2O}');
     expect(html).toContain('katex');

@@ -134,4 +134,10 @@ describe('renderAuto', () => {
     expect(html).not.toContain('katex');
     expect(html).toContain('\\ce');
   });
+
+  it('renders correctly when there is an escaped delimiter before a real one', () => {
+    const html = renderAuto('escaped \\$ but here is a real $E = mc^2$');
+    expect(html).toContain('katex');
+    expect(html).toContain('escaped $ but here is a real');
+  });
 });
