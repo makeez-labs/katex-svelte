@@ -468,9 +468,7 @@ export function getElement(symbolOrName: string): ChemElement | undefined {
   return ELEMENTS.find((e) => e.symbol.toLowerCase() === q || e.name.toLowerCase() === q);
 }
 
-
 // ── Equation balancing (using linear algebra / null space) ────
-
 
 /**
  * Balance a chemical equation using the algebraic method.

@@ -91,3 +91,23 @@ export declare function checkBalance(equation: string): {
  * Look up an element by symbol or name.
  */
 export declare function getElement(symbolOrName: string): ChemElement | undefined;
+/**
+ * Balance a chemical equation using the algebraic method.
+ * Returns the balanced equation with smallest integer coefficients.
+ *
+ * @example
+ * balanceEquation('H2 + O2 -> H2O')
+ * // → { equation: '2H2 + O2 -> 2H2O', coefficients: [2, 1, 2] }
+ *
+ * balanceEquation('Fe + O2 -> Fe2O3')
+ * // → { equation: '4Fe + 3O2 -> 2Fe2O3', coefficients: [4, 3, 2] }
+ *
+ * balanceEquation('C3H8 + O2 -> CO2 + H2O')
+ * // → { equation: 'C3H8 + 5O2 -> 3CO2 + 4H2O', coefficients: [1, 5, 3, 4] }
+ */
+export declare function balanceEquation(equation: string): {
+    equation: string;
+    coefficients: number[];
+    reactants: string[];
+    products: string[];
+} | null;

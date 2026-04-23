@@ -183,14 +183,14 @@ export function renderAuto(text: string, options: AutoRenderOptions = {}): strin
       if (parts[i].type === 'html') continue;
 
       const { content } = parts[i];
-      
+
       let startIndex = 0;
       let openIdx = -1;
-      
+
       while (true) {
         openIdx = content.indexOf(delim.open, startIndex);
         if (openIdx === -1) break;
-        
+
         // Check for escaping (e.g. \\$)
         if (openIdx > 0 && content[openIdx - 1] === '\\') {
           startIndex = openIdx + 1; // move past the escaped character
