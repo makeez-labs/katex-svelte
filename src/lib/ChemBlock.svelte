@@ -11,7 +11,7 @@
    */
   import { renderChemBlock, type RenderOptions } from './renderer.js';
 
-  interface Props extends RenderOptions {
+  interface Props extends Omit<RenderOptions, 'displayMode'> {
     formula: string;
     /** Optional label shown below the equation */
     label?: string;
@@ -30,12 +30,7 @@
     })
   );
 
-  let labelId = $state('');
-  $effect(() => {
-    if (label && !labelId) {
-      labelId = `chem-block-label-${Math.random().toString(36).slice(2, 9)}`;
-    }
-  });
+  const labelId = $props.id();
 </script>
 
 <div
@@ -43,7 +38,7 @@
   class:chem-block--error={!result.isValid}
   role="math"
   aria-label={formula}
-  aria-describedby={labelId}
+  aria-describedby={label ? labelId : undefined}
 >
   <div class="chem-block__equation">
     <!-- eslint-disable-next-line svelte/no-at-html-tags -->

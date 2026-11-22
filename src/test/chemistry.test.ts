@@ -176,6 +176,20 @@ describe('checkBalance', () => {
     const res = checkBalance('N2 + 3H2 <=> 2NH3');
     expect(res.balanced).toBe(true);
   });
+
+  it('handles resonance arrows (<->)', () => {
+    const res = checkBalance('H2 <-> H2');
+    expect(res.balanced).toBe(true);
+    expect(res.left).toEqual({ H: 2 });
+    expect(res.right).toEqual({ H: 2 });
+  });
+
+  it('ignores condition brackets after arrows', () => {
+    const res = checkBalance('CaCO3 ->[\\Delta] CaO + CO2');
+    expect(res.balanced).toBe(true);
+    expect(res.left).toEqual({ Ca: 1, C: 1, O: 3 });
+    expect(res.right).toEqual({ Ca: 1, C: 1, O: 3 });
+  });
 });
 
 describe('calculateMolarMass', () => {
@@ -269,6 +283,23 @@ describe('balanceEquation', () => {
     const result = balanceEquation('SO2 + O2 <=> SO3');
     expect(result).not.toBeNull();
     expect(result!.equation).toContain('SO3');
+  });
+
+  it('preserves equilibrium arrow in balanced output', () => {
+    const result = balanceEquation('SO2 + O2 <=> SO3');
+    expect(result!.equation).toBe('2SO2 + O2 <=> 2SO3');
+  });
+
+  it('handles resonance arrows (<->)', () => {
+    const result = balanceEquation('H2 + O2 <-> H2O');
+    expect(result).not.toBeNull();
+    expect(result!.equation).toBe('2H2 + O2 <-> 2H2O');
+  });
+
+  it('balances equations with condition brackets and preserves them', () => {
+    const result = balanceEquation('CaCO3 ->[\\Delta] CaO + CO2');
+    expect(result).not.toBeNull();
+    expect(result!.equation).toBe('CaCO3 ->[\\Delta] CaO + CO2');
   });
 });
 
