@@ -524,6 +524,11 @@ export function balanceEquation(equation: string): {
 
   const reactants = parseSide(sides[0]);
   const products = parseSide(sides[1]);
+
+  if (reactants.length === 0 || products.length === 0) {
+    return null;
+  }
+
   const allCompounds = [...reactants, ...products];
 
   if (allCompounds.length === 0) {

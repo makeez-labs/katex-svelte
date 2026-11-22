@@ -23,6 +23,22 @@ describe('ChemEquation', () => {
     const { container } = render(ChemEquation, { formula: '\\invalid' });
     expect(container.querySelector('.katex-error')).toBeTruthy();
   });
+
+  it('renders nothing with errorMode none', () => {
+    const { container } = render(ChemEquation, { formula: '\\invalid', errorMode: 'none' });
+    expect(container.querySelector('.katex')).toBeNull();
+    expect(container.querySelector('.katex-error')).toBeNull();
+  });
+
+  it('applies the class prop', () => {
+    const { container } = render(ChemEquation, { formula: 'H2O', class: 'my-math' });
+    expect(container.querySelector('.chem-equation.my-math')).toBeTruthy();
+  });
+
+  it('applies color through to the rendered html', () => {
+    const { container } = render(ChemEquation, { formula: 'H2O', color: 'blue' });
+    expect(container.innerHTML).toContain('style="color:blue"');
+  });
 });
 
 describe('ChemBlock', () => {
@@ -51,6 +67,16 @@ describe('ChemBlock', () => {
     expect(describedBy).toBeTruthy();
     expect(container.querySelector(`#${describedBy}`)?.textContent).toBe('Water');
   });
+
+  it('renders nothing with errorMode none', () => {
+    const { container } = render(ChemBlock, { formula: '\\invalid', errorMode: 'none' });
+    expect(container.querySelector('.katex')).toBeNull();
+  });
+
+  it('omits the label element when there is no label', () => {
+    const { container } = render(ChemBlock, { formula: 'H2O' });
+    expect(container.querySelector('.chem-block__label')).toBeNull();
+  });
 });
 
 describe('LatexMath', () => {
@@ -63,6 +89,11 @@ describe('LatexMath', () => {
   it('renders display math when displayMode is set', () => {
     const { container } = render(LatexMath, { formula: 'E = mc^2', displayMode: true });
     expect(container.querySelector('.katex-display')).toBeTruthy();
+  });
+
+  it('renders nothing with errorMode none', () => {
+    const { container } = render(LatexMath, { formula: '\\invalid', errorMode: 'none' });
+    expect(container.querySelector('.katex')).toBeNull();
   });
 });
 
@@ -77,6 +108,11 @@ describe('LatexBlock', () => {
     const { container } = render(LatexBlock, { formula: 'E = mc^2' });
     expect(container.querySelector('.latex-block')?.getAttribute('aria-describedby')).toBeNull();
   });
+
+  it('shows error text for invalid latex', () => {
+    const { container } = render(LatexBlock, { formula: '\\invalid' });
+    expect(container.querySelector('.katex-error')).toBeTruthy();
+  });
 });
 
 describe('ChemAuto', () => {
@@ -88,6 +124,12 @@ describe('ChemAuto', () => {
   it('renders inside the configured tag', () => {
     const { container } = render(ChemAuto, { text: 'plain', tag: 'div' });
     expect(container.querySelector('div.chem-auto')).toBeTruthy();
+  });
+
+  it('leaves \\ce literal when chemistry is disabled', () => {
+    const { container } = render(ChemAuto, { text: 'Water is \\ce{H2O}', chemistry: false });
+    expect(container.querySelector('.katex')).toBeNull();
+    expect(container.textContent).toContain('\\ce{H2O}');
   });
 });
 
@@ -111,5 +153,18 @@ describe('ChemNotation', () => {
     const { container } = render(ChemNotation, { formula: 'H2O', type: 'reaction' });
     const card = container.querySelector('.chem-notation') as HTMLElement;
     expect(card.style.getPropertyValue('--accent')).toBe('#059669');
+  });
+
+  it('omits name and desc when not provided', () => {
+    const { container } = render(ChemNotation, { formula: 'H2O' });
+    expect(container.querySelector('.chem-notation__name')).toBeNull();
+    expect(container.querySelector('.chem-notation__desc')).toBeNull();
+  });
+
+  it('uses the ionic label and accent for the ionic type', () => {
+    const { container } = render(ChemNotation, { formula: 'H2O', type: 'ionic' });
+    const card = container.querySelector('.chem-notation') as HTMLElement;
+    expect(card.style.getPropertyValue('--accent')).toBe('#7c3aed');
+    expect(container.querySelector('.chem-notation__type')?.textContent).toBe('Ionic equation');
   });
 });
