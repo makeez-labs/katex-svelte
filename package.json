@@ -45,7 +45,7 @@
   ],
   "scripts": {
     "dev": "vite dev",
-    "build": "svelte-package -i src/lib && cp node_modules/katex/dist/katex.min.css dist/",
+    "build": "svelte-package -i src/lib && node scripts/copy-assets.mjs",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -54,7 +54,7 @@
     "format": "prettier --write \"src/**/*.{ts,svelte}\""
   },
   "peerDependencies": {
-    "svelte": "^5.0.0"
+    "svelte": "^5.20.0"
   },
   "dependencies": {
     "katex": "^0.16.45"

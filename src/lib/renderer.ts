@@ -19,9 +19,9 @@ export interface RenderOptions {
   trust?: boolean;
   /** Minimum thickness of lines in em (default: undefined) */
   minRuleThickness?: number;
-  /** Max size for \Huge etc. in ems (default: 10) */
+  /** Max size for \Huge etc. in ems (default: 10 — KaTeX itself allows unlimited; the cap guards against oversized output from untrusted input) */
   maxSize?: number;
-  /** Text colour override */
+  /** Text colour override — wraps the rendered output in a coloured span (any valid CSS colour) */
   color?: string;
 }
 
@@ -66,19 +66,20 @@ export function renderChemBlock(formula: string, options: RenderOptions = {}): R
  * renderLatex('\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}')
  */
 export function renderLatex(latex: string, options: RenderOptions = {}): RenderResult {
-  const { errorMode = 'text', displayMode = false, ...rest } = options;
+  const { errorMode = 'text', displayMode = false, color, ...rest } = options;
 
   try {
-    const html = katex.renderToString(latex, {
+    let html = katex.renderToString(latex, {
       throwOnError: true,
       displayMode,
       output: 'html',
       trust: rest.trust ?? false,
       minRuleThickness: rest.minRuleThickness,
       maxSize: rest.maxSize ?? 10,
-      colorIsTextColor: !!rest.color,
-      ...(rest.color ? { macros: { '\\color': rest.color } } : {}),
     });
+    if (color) {
+      html = `<span style="color:${escapeHtml(color)}">${html}</span>`;
+    }
     return { html, error: null, isValid: true };
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Render failed';

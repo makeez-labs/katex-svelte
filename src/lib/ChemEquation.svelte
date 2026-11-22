@@ -20,7 +20,7 @@
    */
   import { renderChem, type RenderOptions } from './renderer.js';
 
-  interface Props extends RenderOptions {
+  interface Props extends Omit<RenderOptions, 'displayMode'> {
     /** Chemistry formula in mhchem \ce{} notation (without the \ce{} wrapper) */
     formula: string;
     /** Extra CSS classes on the wrapper span */
@@ -32,7 +32,6 @@
   let result = $derived(
     renderChem(formula, {
       ...options,
-      displayMode: false,
       errorMode: options.errorMode ?? 'text',
     })
   );

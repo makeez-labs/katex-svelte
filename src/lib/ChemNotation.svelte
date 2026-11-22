@@ -66,13 +66,19 @@
 </div>
 
 <style>
+  /* Override these custom properties to adapt the card to dark mode */
   .chem-notation {
-    border: 1px solid #e2e8f0;
+    --notation-border: var(--chem-notation-border, #e2e8f0);
+    --notation-bg: var(--chem-notation-bg, #f8fafc);
+    --notation-text: var(--chem-notation-text, #0f172a);
+    --notation-muted: var(--chem-notation-muted, #64748b);
+
+    border: 1px solid var(--notation-border);
     border-left: 3px solid var(--accent);
     border-radius: 8px;
     padding: 14px 18px;
     margin: 12px 0;
-    background: #f8fafc;
+    background: var(--notation-bg);
   }
 
   .chem-notation__type {
@@ -93,13 +99,13 @@
   .chem-notation__name {
     font-size: 14px;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--notation-text);
     margin-bottom: 4px;
   }
 
   .chem-notation__desc {
     font-size: 13px;
-    color: #64748b;
+    color: var(--notation-muted);
     line-height: 1.55;
     margin: 0;
   }
