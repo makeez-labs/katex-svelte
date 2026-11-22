@@ -50,6 +50,16 @@ describe('buildReaction', () => {
     expect(r).not.toContain('[');
     expect(r).not.toContain(']');
   });
+
+  it('adds a below-arrow condition on its own', () => {
+    const r = buildReaction(['A'], ['B'], '->', undefined, 'heat');
+    expect(r).toBe('A ->[][heat] B');
+  });
+
+  it('adds an above-arrow condition on its own', () => {
+    const r = buildReaction(['A'], ['B'], '->', '\\Delta');
+    expect(r).toBe('A ->[\\Delta][] B');
+  });
 });
 
 describe('searchFormulas', () => {
@@ -70,6 +80,10 @@ describe('searchFormulas', () => {
 
   it('is case insensitive', () => {
     expect(searchFormulas('WATER')).toHaveLength(searchFormulas('water').length);
+  });
+
+  it('returns all entries for an empty query', () => {
+    expect(searchFormulas('')).toHaveLength(Object.keys(COMMON_FORMULAS).length);
   });
 });
 
@@ -101,6 +115,15 @@ describe('getElement', () => {
   it('returns undefined for unknown element', () => {
     expect(getElement('Xx')).toBeUndefined();
   });
+
+  it('matches name case-insensitively', () => {
+    expect(getElement('IRON')?.symbol).toBe('Fe');
+    expect(getElement('IRON')?.number).toBe(26);
+  });
+
+  it('matches symbol case-insensitively', () => {
+    expect(getElement('fe')?.name).toBe('Iron');
+  });
 });
 
 describe('COMMON_FORMULAS', () => {
@@ -126,6 +149,16 @@ describe('ELEMENTS', () => {
   it('twentieth element is calcium', () => {
     expect(ELEMENTS[19].symbol).toBe('Ca');
     expect(ELEMENTS[19].number).toBe(20);
+  });
+
+  it('has sequential atomic numbers', () => {
+    ELEMENTS.forEach((el, i) => expect(el.number).toBe(i + 1));
+  });
+
+  it('has unique symbols and positive masses', () => {
+    const symbols = new Set(ELEMENTS.map((el) => el.symbol));
+    expect(symbols.size).toBe(118);
+    for (const el of ELEMENTS) expect(el.mass).toBeGreaterThan(0);
   });
 });
 
@@ -156,6 +189,28 @@ describe('parseFormula', () => {
   it('preserves chemical group parentheses when state symbols are present', () => {
     expect(parseFormula('Ca(OH)2(aq)')).toEqual({ Ca: 1, O: 2, H: 2 });
     expect(parseFormula('Mg(NO3)2(aq)')).toEqual({ Mg: 1, N: 2, O: 6 });
+  });
+
+  it('handles nested parentheses', () => {
+    expect(parseFormula('Mg3(PO4)2')).toEqual({ Mg: 3, P: 2, O: 8 });
+  });
+
+  it('treats square brackets as grouping', () => {
+    expect(parseFormula('K4[Fe(CN)6]')).toEqual({ K: 4, Fe: 1, C: 6, N: 6 });
+  });
+
+  it('ignores charges and notation markers', () => {
+    expect(parseFormula('Fe^2+')).toEqual({ Fe: 1 });
+    expect(parseFormula('Cl^-_{(aq)}')).toEqual({ Cl: 1 });
+  });
+
+  it('handles empty and whitespace input', () => {
+    expect(parseFormula('')).toEqual({});
+    expect(parseFormula('   ')).toEqual({});
+  });
+
+  it('parses multi-digit subscripts', () => {
+    expect(parseFormula('C6H12O6')).toEqual({ C: 6, H: 12, O: 6 });
   });
 });
 
@@ -190,6 +245,25 @@ describe('checkBalance', () => {
     expect(res.left).toEqual({ Ca: 1, C: 1, O: 3 });
     expect(res.right).toEqual({ Ca: 1, C: 1, O: 3 });
   });
+
+  it('handles state symbols', () => {
+    const res = checkBalance('2H2(g) + O2(g) -> 2H2O(l)');
+    expect(res.balanced).toBe(true);
+  });
+
+  it('reports all mismatched elements', () => {
+    const res = checkBalance('C3H8 + O2 -> CO2 + H2O');
+    expect(res.balanced).toBe(false);
+    expect(res.missing).toEqual(expect.arrayContaining(['C', 'H', 'O']));
+  });
+
+  it('throws when there is no arrow', () => {
+    expect(() => checkBalance('no arrow here')).toThrow();
+  });
+
+  it('throws when there are multiple arrows', () => {
+    expect(() => checkBalance('A -> B -> C')).toThrow();
+  });
 });
 
 describe('calculateMolarMass', () => {
@@ -220,6 +294,19 @@ describe('calculateMolarMass', () => {
 
   it('returns null for invalid element', () => {
     expect(calculateMolarMass('XxO')).toBeNull();
+  });
+
+  it('handles empty and whitespace input', () => {
+    expect(calculateMolarMass('')).toBe(0);
+    expect(calculateMolarMass(' H2O ')).toBeCloseTo(18.015, 2);
+  });
+
+  it('strips state symbols', () => {
+    expect(calculateMolarMass('H2O(l)')).toBeCloseTo(18.015, 2);
+  });
+
+  it('handles square-bracket grouping', () => {
+    expect(calculateMolarMass('K4[Fe(CN)6]')).toBeCloseTo(368.345, 2);
   });
 
   it('calculates molar mass of complex formula', () => {
@@ -270,8 +357,26 @@ describe('balanceEquation', () => {
   it('handles complex reactions', () => {
     const result = balanceEquation('KMnO4 + HCl -> KCl + MnCl2 + Cl2 + H2O');
     expect(result).not.toBeNull();
-    // Should balance to: 2KMnO4 + 16HCl -> 2KCl + 2MnCl2 + 5Cl2 + 8H2O
-    expect(result!.coefficients.length).toBeGreaterThanOrEqual(5);
+    expect(result!.coefficients).toEqual([2, 16, 2, 2, 5, 8]);
+  });
+
+  it('balances same-species decomposition', () => {
+    const result = balanceEquation('O2 -> O3');
+    expect(result).not.toBeNull();
+    expect(result!.equation).toBe('3O2 -> 2O3');
+    expect(result!.coefficients).toEqual([3, 2]);
+  });
+
+  it('handles identical compounds on both sides', () => {
+    const result = balanceEquation('H2O -> H2O');
+    expect(result).not.toBeNull();
+    expect(result!.equation).toBe('H2O -> H2O');
+    expect(result!.coefficients).toEqual([1, 1]);
+  });
+
+  it('returns null when a side is empty', () => {
+    expect(balanceEquation(' -> H2O')).toBeNull();
+    expect(balanceEquation('H2 -> ')).toBeNull();
   });
 
   it('returns null for invalid equation', () => {
