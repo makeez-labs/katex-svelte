@@ -1,6 +1,6 @@
 {
   "name": "katex-svelte",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Svelte 5 wrapper for KaTeX — render LaTeX math and chemistry equations (mhchem) with \\ce{} notation",
   "keywords": [
     "svelte",
