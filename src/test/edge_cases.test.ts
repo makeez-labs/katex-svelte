@@ -44,10 +44,34 @@ describe('Edge Cases', () => {
       expect(rendered).not.toContain('$a$');
     });
 
-    it('leaves dollars literal around chemistry inside $...$', () => {
+    it('renders chemistry inside $...$ via mhchem math mode', () => {
       const rendered = renderAuto('$\\ce{H2O}$');
       expect(rendered).toContain('katex');
-      expect(rendered).toContain('$');
+      expect(rendered).not.toContain('$');
+    });
+
+    it('renders $$...$$ block math containing \\ce{} chemistry', () => {
+      const rendered = renderAuto('Yield: $$K_p = \\frac{p(\\ce{NH3})^2}{p(\\ce{N2})}$$ done');
+      expect(rendered).toContain('katex-display');
+      expect(rendered).not.toContain('$$');
+      expect(rendered).not.toContain('\\frac{p(');
+    });
+
+    it('renders nested braces inside \\ce{} (charged ions)', () => {
+      const rendered = renderAuto('The ion is \\ce{SO4^{2-}} in solution');
+      expect(rendered).toContain('katex');
+      expect(rendered).not.toContain('katex-error');
+      expect(rendered).not.toContain('\\ce{');
+    });
+
+    it('renders deeply nested braces inside \\ce{}', () => {
+      const rendered = renderAuto('\\ce{Ca(OH)2} and \\ce{Cr2O7^{2-}}');
+      expect(rendered).not.toContain('katex-error');
+      expect((rendered.match(/class="katex"/g) || []).length).toBe(2);
+    });
+
+    it('leaves unclosed \\ce{ with nested braces literal', () => {
+      expect(renderAuto('\\ce{SO4^{2-} unclosed')).toBe('\\ce{SO4^{2-} unclosed');
     });
 
     it('renders error for invalid block math in default mode', () => {

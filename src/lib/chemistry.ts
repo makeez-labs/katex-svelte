@@ -531,10 +531,6 @@ export function balanceEquation(equation: string): {
 
   const allCompounds = [...reactants, ...products];
 
-  if (allCompounds.length === 0) {
-    return null;
-  }
-
   // Extract all unique elements
   const elementSet = new Set<string>();
   const parsedCompounds = allCompounds.map((compound) => {

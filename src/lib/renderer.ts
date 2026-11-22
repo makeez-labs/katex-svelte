@@ -162,6 +162,10 @@ export function renderAuto(text: string, options: AutoRenderOptions = {}): strin
     })),
   ];
 
+  // Math delimiters sorted by opener length descending (e.g. $$ before $).
+  // Chemistry goes last: \ce{} inside $...$/$$...$$ then renders via mhchem's
+  // math-mode support instead of splitting the math delimiters apart.
+  delimiters.sort((a, b) => b.open.length - a.open.length);
   if (chemistry) {
     delimiters.push({
       open: escapeHtml('\\ce{'),
@@ -170,9 +174,6 @@ export function renderAuto(text: string, options: AutoRenderOptions = {}): strin
       type: 'chem' as const,
     });
   }
-
-  // Sort by opener length descending to match longest first (e.g. $$ before $)
-  delimiters.sort((a, b) => b.open.length - a.open.length);
 
   // We'll use a marker-based approach to protect math/chem parts from subsequent replaces
   const parts: Array<{ type: 'text' | 'html'; content: string }> = [
@@ -202,7 +203,12 @@ export function renderAuto(text: string, options: AutoRenderOptions = {}): strin
 
       if (openIdx === -1) continue;
 
-      const closeIdx = content.indexOf(delim.close, openIdx + delim.open.length);
+      // \ce{} content can contain nested braces (e.g. \ce{SO4^{2-}}),
+      // so match the closing brace by depth rather than the first occurrence
+      const closeIdx =
+        delim.type === 'chem' && delim.open.endsWith('{')
+          ? findMatchingBrace(content, openIdx + delim.open.length - 1)
+          : content.indexOf(delim.close, openIdx + delim.open.length);
       if (closeIdx === -1) continue;
 
       const before = content.substring(0, openIdx);
@@ -260,6 +266,22 @@ export function isValidLatex(latex: string): boolean {
 }
 
 // ── Helpers ───────────────────────────────────────────────────
+
+/**
+ * Find the index of the `}` matching the `{` at openBraceIdx,
+ * accounting for nested braces. Returns -1 if unmatched.
+ */
+function findMatchingBrace(content: string, openBraceIdx: number): number {
+  let depth = 0;
+  for (let i = openBraceIdx; i < content.length; i++) {
+    if (content[i] === '{') depth++;
+    else if (content[i] === '}') {
+      depth--;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
+}
 
 function escapeHtml(s: string): string {
   return s
