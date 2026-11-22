@@ -81,6 +81,26 @@ describe('renderLatex', () => {
     expect(r.isValid).toBe(false);
     expect(r.html).toContain('katex-error');
   });
+
+  it('applies color as a wrapper span', () => {
+    const r = renderLatex('E = mc^2', { color: 'red' });
+    expect(r.isValid).toBe(true);
+    expect(r.html).toMatch(/^<span style="color:red">/);
+    expect(r.html.endsWith('</span>')).toBe(true);
+    expect(r.html).toContain('katex');
+  });
+
+  it('escapes quotes in the color value', () => {
+    const r = renderLatex('E = mc^2', { color: 'red"onmouseover="x' });
+    expect(r.isValid).toBe(true);
+    expect(r.html).not.toContain('"onmouseover');
+    expect(r.html).toContain('&quot;');
+  });
+
+  it('does not wrap output when color is not set', () => {
+    const r = renderLatex('E = mc^2');
+    expect(r.html.startsWith('<span style="color:')).toBe(false);
+  });
 });
 
 // ── isValidChem ───────────────────────────────────────────────

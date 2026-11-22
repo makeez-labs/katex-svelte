@@ -16,7 +16,7 @@
    */
   import { renderLatexBlock, type RenderOptions } from './renderer.js';
 
-  interface Props extends RenderOptions {
+  interface Props extends Omit<RenderOptions, 'displayMode'> {
     formula: string;
     label?: string;
     number?: string | number;
@@ -32,12 +32,7 @@
     })
   );
 
-  let labelId = $state('');
-  $effect(() => {
-    if (label && !labelId) {
-      labelId = `latex-block-label-${Math.random().toString(36).slice(2, 9)}`;
-    }
-  });
+  const labelId = $props.id();
 </script>
 
 <div
@@ -45,7 +40,7 @@
   class:latex-block--error={!result.isValid}
   role="math"
   aria-label={formula}
-  aria-describedby={labelId || undefined}
+  aria-describedby={label ? labelId : undefined}
 >
   <div class="latex-block__inner">
     <!-- eslint-disable-next-line svelte/no-at-html-tags -->

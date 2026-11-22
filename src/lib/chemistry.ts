@@ -419,6 +419,15 @@ export function calculateMolarMass(formula: string): number | null {
   return Math.round(totalMass * 1000) / 1000; // Round to 3 decimal places
 }
 
+// ── Equation checking ─────────────────────────────────────────
+
+/**
+ * Matches a reaction arrow, optionally followed by up to two condition
+ * brackets (e.g. `->[\Delta]` or `<=>[\text{cat}][\text{Pt}]`).
+ * Alternation is ordered longest-first so `<->` is not cut at `<-`.
+ */
+const ARROW_RE = /(?:<=>|<->|->|<-)(?:\[[^\]]*\]){0,2}/;
+
 /**
  * Check if a chemical equation is balanced.
  * Returns an object with balance status and atom counts for both sides.
@@ -429,8 +438,8 @@ export function checkBalance(equation: string): {
   right: Record<string, number>;
   missing?: string[];
 } {
-  // Split by arrow (->, <=>, etc.)
-  const sides = equation.split(/->|<=>|<-|<->/);
+  // Split by arrow (->, <=>, <->, <-, with optional condition brackets)
+  const sides = equation.split(ARROW_RE);
   if (sides.length !== 2) {
     throw new Error('Invalid equation: must have exactly one arrow');
   }
@@ -494,8 +503,14 @@ export function balanceEquation(equation: string): {
   reactants: string[];
   products: string[];
 } | null {
-  // Parse the equation
-  const sides = equation.split(/->|<=>|<-|<->/).map((s) => s.trim());
+  // Parse the equation, capturing the arrow (with any condition brackets)
+  // so it can be preserved in the balanced output
+  const arrowMatch = equation.match(ARROW_RE);
+  if (!arrowMatch) {
+    return null;
+  }
+  const arrow = arrowMatch[0];
+  const sides = equation.split(ARROW_RE).map((s) => s.trim());
   if (sides.length !== 2) {
     return null;
   }
@@ -509,6 +524,11 @@ export function balanceEquation(equation: string): {
 
   const reactants = parseSide(sides[0]);
   const products = parseSide(sides[1]);
+
+  if (reactants.length === 0 || products.length === 0) {
+    return null;
+  }
+
   const allCompounds = [...reactants, ...products];
 
   if (allCompounds.length === 0) {
@@ -560,7 +580,7 @@ export function balanceEquation(equation: string): {
   );
 
   return {
-    equation: `${balancedReactants.join(' + ')} -> ${balancedProducts.join(' + ')}`,
+    equation: `${balancedReactants.join(' + ')} ${arrow} ${balancedProducts.join(' + ')}`,
     coefficients,
     reactants,
     products,
